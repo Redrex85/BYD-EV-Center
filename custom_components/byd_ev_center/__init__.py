@@ -218,6 +218,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             saved = coord.service_set_notify_texts(texts)
             _LOGGER.info("Testi notifiche aggiornati: %s", list(saved))
 
+    async def handle_test_notification(call: ServiceCall) -> None:
+        tipo = str(call.data.get("tipo", "cs") or "cs")
+        for coord in _all_coordinators(hass):
+            ok = await coord.service_test_notification(tipo)
+            if ok:
+                _LOGGER.info("Notifica di prova '%s' inviata", tipo)
+            else:
+                _LOGGER.warning("Notifica di prova '%s' NON inviata: servizio notify mancante", tipo)
+
     async def handle_set_charge_zones(call: ServiceCall) -> None:
         pairs = call.data.get("zones") or []
         for coord in _all_coordinators(hass):
@@ -342,6 +351,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
               supports_response=SupportsResponse.OPTIONAL)
     _register(SERVICE_SET_NOTIFY_TEXTS, handle_set_notify_texts,
               schema=vol.Schema({vol.Optional("texts", default={}): dict}))
+    _register("test_notification", handle_test_notification,
+              schema=vol.Schema({vol.Optional("tipo", default="cs"): cv.string}))
     _register(SERVICE_EXPORT_DATA, handle_export_data,
               supports_response=SupportsResponse.OPTIONAL)
     _register(SERVICE_IMPORT_DATA, handle_import_data, admin=True,

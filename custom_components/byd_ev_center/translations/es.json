@@ -673,6 +673,16 @@
     "set_notify_texts": {
       "name": "Textos de las notificaciones",
       "description": "Personaliza los textos de las notificaciones (inicio, recarga terminada, batería baja)."
+    },
+    "test_notification": {
+      "name": "Notificación de prueba",
+      "description": "Envía una notificación de prueba del tipo elegido.",
+      "fields": {
+        "tipo": {
+          "name": "Tipo",
+          "description": "cs = recarga iniciada, cc = recarga completada, lb = batería baja, sum = resumen diario, dead = vencimientos, bal = balance casa, sol = balance solar, gse_stop = GSE en pausa, gse_go = GSE reanudada, auto_start = recarga iniciada."
+        }
+      }
     }
   },
   "selector": {
@@ -1042,6 +1052,9 @@
       },
       "gse": {
         "name": "Experimentación GSE"
+      },
+      "notify_daily": {
+        "name": "Resumen diario"
       }
     },
     "time": {

@@ -673,6 +673,16 @@
     "set_notify_texts": {
       "name": "Notification texts",
       "description": "Customize the notification texts (start, charge finished, low battery)."
+    },
+    "test_notification": {
+      "name": "Test notification",
+      "description": "Send a test notification of the selected type.",
+      "fields": {
+        "tipo": {
+          "name": "Type",
+          "description": "cs = charging started, cc = charging complete, lb = low battery, sum = daily summary, dead = deadlines, bal = home balancing, sol = solar balancing, gse_stop = GSE paused, gse_go = GSE resumed, auto_start = charging started."
+        }
+      }
     }
   },
   "selector": {
@@ -1042,6 +1052,9 @@
       },
       "gse": {
         "name": "GSE trial"
+      },
+      "notify_daily": {
+        "name": "Daily summary"
       }
     },
     "time": {

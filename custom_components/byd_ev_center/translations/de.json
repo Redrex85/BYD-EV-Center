@@ -673,6 +673,16 @@
     "set_notify_texts": {
       "name": "Benachrichtigungstexte",
       "description": "Passe die Texte der Benachrichtigungen an (Start, Ladung beendet, niedriger Akku)."
+    },
+    "test_notification": {
+      "name": "Testbenachrichtigung",
+      "description": "Sendet eine Testbenachrichtigung des gewählten Typs.",
+      "fields": {
+        "tipo": {
+          "name": "Typ",
+          "description": "cs = Laden gestartet, cc = Ladung abgeschlossen, lb = Batterie schwach, sum = Tageszusammenfassung, dead = Fristen, bal = Haus-Balancing, sol = Solar-Balancing, gse_stop = GSE pausiert, gse_go = GSE fortgesetzt, auto_start = Laden gestartet."
+        }
+      }
     }
   },
   "selector": {
@@ -1042,6 +1052,9 @@
       },
       "gse": {
         "name": "GSE-Experiment"
+      },
+      "notify_daily": {
+        "name": "Tageszusammenfassung"
       }
     },
     "time": {

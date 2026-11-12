@@ -20,7 +20,7 @@
  */
 
 /** Versione compilata: usata per l'auto-refresh quando l'integrazione viene aggiornata. */
-const BYD_VER = "1.0.4";
+const BYD_VER = "1.0.5";
 let _recVerChecked = false;
 
 // --- i18n del pannello: lingua da hass.language (IT base, EN/FR). ES/DE in arrivo ---
@@ -245,6 +245,19 @@ const I18N = {
     btn_notify_save: "💾 Save texts",
     note_nt_vars: "Variables: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Empty = default text.",
     toast_notify_saved: "💾 Texts saved",
+    nt_cs: "Charge start",
+    nt_cc: "Charge end",
+    nt_lb: "Low battery",
+    nt_sum: "Summary",
+    nt_dead: "Deadlines",
+    nt_bal: "Home balance",
+    nt_sol: "Solar balance",
+    nt_gse_stop: "GSE pause",
+    nt_gse_go: "GSE resume",
+    nt_auto_start: "Auto start",
+    lbl_notify_test: "Test notifications (to yourself)",
+    note_nt_test: "One button per type: sends a test message to the configured notify service.",
+    toast_notify_test: "✅ Test sent",
     h3_backup: "💾 Data backup",
     btn_export_data: "⬇️ Export all data",
     btn_import_data: "⬆️ Import from file",
@@ -514,6 +527,19 @@ const I18N = {
     btn_notify_save: "💾 Enregistrer les textes",
     note_nt_vars: "Variables : {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vide = texte par défaut.",
     toast_notify_saved: "💾 Textes enregistrés",
+    nt_cs: "Début recharge",
+    nt_cc: "Fin recharge",
+    nt_lb: "Batterie faible",
+    nt_sum: "Résumé",
+    nt_dead: "Échéances",
+    nt_bal: "Équilibrage maison",
+    nt_sol: "Équilibrage solaire",
+    nt_gse_stop: "GSE pause",
+    nt_gse_go: "GSE reprise",
+    nt_auto_start: "Démarrage auto",
+    lbl_notify_test: "Tester les notifications (vers vous-même)",
+    note_nt_test: "Un bouton par type : envoie un message de test au service notify configuré.",
+    toast_notify_test: "✅ Test envoyé",
     h3_backup: "💾 Sauvegarde",
     btn_export_data: "⬇️ Exporter toutes les données",
     btn_import_data: "⬆️ Importer depuis un fichier",
@@ -792,6 +818,19 @@ const I18N = {
     btn_notify_save: "💾 Guardar textos",
     note_nt_vars: "Variables: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vacío = texto por defecto.",
     toast_notify_saved: "💾 Textos guardados",
+    nt_cs: "Inicio recarga",
+    nt_cc: "Fin recarga",
+    nt_lb: "Batería baja",
+    nt_sum: "Resumen",
+    nt_dead: "Vencimientos",
+    nt_bal: "Balance casa",
+    nt_sol: "Balance solar",
+    nt_gse_stop: "GSE pausa",
+    nt_gse_go: "GSE reanudar",
+    nt_auto_start: "Inicio auto",
+    lbl_notify_test: "Probar notificaciones (a ti mismo)",
+    note_nt_test: "Un botón por tipo: envía un mensaje de prueba al servicio notify configurado.",
+    toast_notify_test: "✅ Test enviado",
     h3_backup: "💾 Copia de datos",
     btn_export_data: "⬇️ Exportar todos los datos",
     btn_import_data: "⬆️ Importar desde archivo",
@@ -1070,6 +1109,19 @@ const I18N = {
     btn_notify_save: "💾 Texte speichern",
     note_nt_vars: "Variablen: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Leer = Standardtext.",
     toast_notify_saved: "💾 Texte gespeichert",
+    nt_cs: "Ladestart",
+    nt_cc: "Ladeende",
+    nt_lb: "Batterie schwach",
+    nt_sum: "Zusammenfassung",
+    nt_dead: "Fristen",
+    nt_bal: "Haus-Balance",
+    nt_sol: "Solar-Balance",
+    nt_gse_stop: "GSE Pause",
+    nt_gse_go: "GSE Fortsetzen",
+    nt_auto_start: "Auto-Start",
+    lbl_notify_test: "Benachrichtigungen testen (an dich selbst)",
+    note_nt_test: "Ein Button pro Typ: sendet eine Testnachricht an den konfigurierten notify-Dienst.",
+    toast_notify_test: "✅ Test gesendet",
     h3_backup: "💾 Daten-Backup",
     btn_export_data: "⬇️ Alle Daten exportieren",
     btn_import_data: "⬆️ Aus Datei importieren",
@@ -3937,6 +3989,12 @@ class BydEvCenterPanel extends HTMLElement {
       case "openmap": this._moreInfo(this._car("device_tracker", "posizione") || "device_tracker.dolphin_surf_posizione"); break;
       case "csv": this._call(D, "export_trips_csv", {}, "📥 CSV esportato"); break;
       case "notify_save": this._saveNotifyTexts(); break;
+      case "notify_test": {
+        const _nt = (el && el.dataset && el.dataset.ntype) || "cs";
+        this._call(D, "test_notification", { tipo: _nt },
+          _t("toast_notify_test", "✅ Test inviato"));
+        break;
+      }
       case "refresh_car": this._call(D, "refresh_car", {}, "🔄 Aggiornamento auto richiesto"); break;
       case "schsave_ricarica": this._saveSchedule("ricarica"); break;
       case "schsave_clima": this._saveSchedule("clima"); break;
@@ -5622,6 +5680,12 @@ const THEMES = [
   ["ev", "#ffd23f", "⚡ EV Center"], ["blu", "#4d8dff", "🔵 Blu Dolphin Surf"], ["giallo", "#F5CB39", "🟡 Giallo"],
   ["verde", "#57b98a", "🟢 Verde R4"], ["aviation", "#c9d4e2", "⚪ Grigio Aviation"],
 ];
+const NT_TYPES = [
+  ["cs", "Avvio ricarica"], ["cc", "Fine ricarica"], ["lb", "Batteria bassa"],
+  ["sum", "Riepilogo"], ["dead", "Scadenze"], ["bal", "Bilancio casa"],
+  ["sol", "Bilancio solare"], ["gse_stop", "GSE pausa"], ["gse_go", "GSE ripresa"],
+  ["auto_start", "Avvio auto"],
+];
 
 // NB: nome prefissato per NON ombreggiare window.CSS (romperebbe CSS.escape di altre card)
 const BYD_CSS = `
@@ -6238,6 +6302,11 @@ const PAGES = () => ({
       <div style="margin-top:8px;font-size:12px;color:var(--muted)">${_t("lbl_nt_end_body", "Messaggio fine ricarica")}</div>
       <textarea data-nt="cc_body" rows="5" style="width:100%;font-family:inherit;font-size:12px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px" placeholder="${_t("ph_nt_body", "📍 {zona}\n⚡️ {kwh:.2f} kWh\n🕐 {durata:.2f} h\n📊 {soc0:.0f}% → {soc1:.0f}%\n💰 €{costo:.2f}")}"></textarea>
       <div class="btn" data-cmd="notify_save" style="margin-top:8px">${_t("btn_notify_save", "💾 Salva testi")}</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted)">${_t("lbl_notify_test", "Prova notifiche (a te stesso)")}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        ${NT_TYPES.map(([tipo, lbl]) => `<button class="btn" data-cmd="notify_test" data-ntype="${tipo}" style="padding:6px 10px;font-size:12px">${_t("nt_" + tipo, lbl)}</button>`).join("")}
+      </div>
+      <div style="color:var(--muted);font-size:11.5px;margin-top:6px">${_t("note_nt_test", "Un pulsante per ogni tipo: invia un messaggio di prova al servizio notify configurato.")}</div>
       <div style="color:var(--muted);font-size:11.5px;margin-top:6px">${_t("note_nt_vars", "Variabili: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vuoto = testo predefinito.")}</div></div>
     <div class="card"><h3>${_t("h3_lingua", "🌐 Lingua")}</h3>
       <div class="inp"><span>${_t("lbl_lingua_pannello", "Lingua pannello")}</span>

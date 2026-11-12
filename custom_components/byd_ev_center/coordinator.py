@@ -162,6 +162,16 @@ _LOGGER = logging.getLogger(__name__)
 
 PERIODS = ("daily", "weekly", "monthly", "yearly")
 
+# notifiche: tipi disponibili nel servizio di prova (stessi prefissi di _NOTIFY_L10N)
+NOTIFY_TEST_TYPES = ("cs", "cc", "lb", "sum", "dead", "bal", "sol", "gse_stop", "gse_go", "auto_start")
+NOTIFY_TEST_SAMPLES: dict[str, Any] = {
+    "cap": 60.4, "tipo": "AC", "soc": 42, "rng": 180, "cur": 16.0, "amps": 13.0,
+    "motivo": "Test notifica", "rete": 0.0, "surplus": 2500.0, "a0": 6.0, "a1": 10.0,
+    "casa": 900.0, "budget": 3000.0, "righe": "- Assicurazione: 01/01/2027",
+    "zona": "Casa", "kwh": 12.5, "durata": 1.5, "soc0": 30.0, "soc1": 80.0, "costo": 4.32,
+    "km": 62.4, "kwh_day": 12.5, "costo_day": 3.12, "cons_day": 20.0, "costo_km": 0.05,
+}
+
 
 def _f(value: Any, default: float = 0.0) -> float:
     try:
@@ -2272,6 +2282,8 @@ class BydMateCoordinator(DataUpdateCoordinator):
                 await self.async_restore_auto_states()
             except Exception:  # noqa: BLE001
                 pass
+        # riepilogo giornaliero: FUORI dai blocchi condizionali, a ogni poll
+        await self._check_daily_summary(now, data)
         return data
 
     # ------------------------------------------------------------ fine ricarica
@@ -3352,6 +3364,58 @@ class BydMateCoordinator(DataUpdateCoordinator):
             if st is not None:
                 return st.state == "on"
         return False
+
+    async def _check_daily_summary(self, oggi: datetime, data: dict | None = None) -> None:
+        """Riepilogo giornaliero: una notifica al giorno, dopo le 21."""
+        if not self.notify_service or not self._switch_on("notify_daily"):
+            return
+        if oggi.hour < 21:
+            return
+        today = oggi.strftime("%Y-%m-%d")
+        counters = self.store.data.setdefault("counters", {})
+        if str(counters.get("last_summary") or "") == today:
+            return
+        d = data if isinstance(data, dict) else (self.data or {})
+        km = self._km_shown("daily") or _f(d.get("km_oggi_trip"), 0.0)
+        kwh = abs(self._kwh_shown("daily"))
+        if km <= 0.5 or kwh <= 0:
+            return
+        cons = kwh / km * 100.0
+        costo = kwh * self.price_home
+        costo_km = costo / km
+        msg = "\n".join((
+            f"{self._tr('sum_km')}: {km:.1f} km",
+            f"{self._tr('sum_energy')}: {kwh:.2f} kWh",
+            f"{self._tr('sum_cost')}: {costo:.2f} €",
+            f"{self._tr('sum_cons')}: {cons:.1f} kWh/100km · "
+            f"{self._tr('sum_costkm')}: {costo_km:.3f} €/km",
+        ))
+        await self._send_notify(self._tr("sum_title"), msg)
+        counters["last_summary"] = today
+        self.persist(force=True)
+
+    async def service_test_notification(self, tipo: str) -> bool:
+        """Invia una notifica di prova del tipo richiesto. False se notify manca."""
+        t = str(tipo or "cs").strip().lower()
+        if t not in NOTIFY_TEST_TYPES:
+            t = "cs"
+        if not self.notify_service:
+            return False
+        s = dict(NOTIFY_TEST_SAMPLES)
+        if t == "sum":
+            body = "\n".join((
+                f"{self._tr('sum_km')}: {s['km']:.1f} km",
+                f"{self._tr('sum_energy')}: {s['kwh_day']:.2f} kWh",
+                f"{self._tr('sum_cost')}: {s['costo_day']:.2f} €",
+                f"{self._tr('sum_cons')}: {s['cons_day']:.1f} kWh/100km · "
+                f"{self._tr('sum_costkm')}: {s['costo_km']:.3f} €/km",
+            ))
+        elif t == "cc":
+            body = self._tr("cc_body", **s)
+        else:
+            body = self._tr(f"{t}_msg", **s)
+        await self._send_notify(self._tr(f"{t}_title"), body)
+        return True
 
     async def _wb_charge(self, avvia: bool, battery: float = 0.0) -> None:
         """Avvia/ferma la carica tramite la WALLBOX (switch o button).

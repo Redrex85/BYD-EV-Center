@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.5 - 2026-11-12
+
+- Nuovo riepilogo giornaliero nativo: una notifica la sera (dopo le 21) con km,
+  kWh consumati, costo stimato, consumo e costo/km del giorno. Si abilita con lo
+  switch "Riepilogo Giornaliero".
+- Nuovo servizio `byd_ev_center.test_notification` (`tipo`:
+  cs, cc, lb, sum, dead, bal, sol, gse_stop, gse_go, auto_start) per inviare una
+  notifica di prova con i testi correnti.
+- Pannello: nella card Notifiche (Impostazioni) 10 pulsanti di prova, uno per
+  tipo di notifica.
+- `services.test_notification` + `entity.switch.notify_daily` tradotti in
+  it/en/fr/es/de.
+
 ## 1.0.4 - 2026-11-12
 
 - Fix pannello: `_drawByd` chiamava `this._t(...)` ma `_t` è una funzione di

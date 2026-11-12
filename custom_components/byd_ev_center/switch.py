@@ -30,6 +30,7 @@ async def async_setup_entry(
         MateSwitch(coordinator, "balance", False, "mdi:solar-power"),
         MateSwitch(coordinator, "home_balance", False, "mdi:home-lightning-bolt"),
         MateSwitch(coordinator, "battery_night_only", False, "mdi:weather-night"),
+        MateSwitch(coordinator, "notify_daily", True, "mdi:calendar-today"),
     ]
     # lo switch GSE esiste solo se la sperimentazione è abilitata in configurazione
     if getattr(coordinator, "gse_enabled", False):

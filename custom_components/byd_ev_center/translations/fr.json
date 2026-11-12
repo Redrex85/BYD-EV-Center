@@ -673,6 +673,16 @@
     "set_notify_texts": {
       "name": "Textes des notifications",
       "description": "Personnalise les textes des notifications (début, recharge terminée, batterie faible)."
+    },
+    "test_notification": {
+      "name": "Notification de test",
+      "description": "Envoie une notification de test du type choisi.",
+      "fields": {
+        "tipo": {
+          "name": "Type",
+          "description": "cs = recharge démarrée, cc = recharge terminée, lb = batterie faible, sum = résumé quotidien, dead = échéances, bal = équilibrage maison, sol = équilibrage solaire, gse_stop = GSE en pause, gse_go = GSE reprise, auto_start = recharge démarrée."
+        }
+      }
     }
   },
   "selector": {
@@ -1042,6 +1052,9 @@
       },
       "gse": {
         "name": "Expérimentation GSE"
+      },
+      "notify_daily": {
+        "name": "Résumé quotidien"
       }
     },
     "time": {

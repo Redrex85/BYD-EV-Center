@@ -673,6 +673,16 @@
     "set_notify_texts": {
       "name": "Testi delle notifiche",
       "description": "Personalizza i testi delle notifiche (avvio, fine ricarica, batteria bassa)."
+    },
+    "test_notification": {
+      "name": "Notifica di prova",
+      "description": "Invia una notifica di prova del tipo scelto.",
+      "fields": {
+        "tipo": {
+          "name": "Tipo",
+          "description": "cs = avvio ricarica, cc = fine ricarica, lb = batteria bassa, sum = riepilogo giornaliero, dead = scadenze, bal = bilanciamento casa, sol = bilanciamento solare, gse_stop = GSE pausa, gse_go = GSE ripresa, auto_start = ricarica avviata."
+        }
+      }
     }
   },
   "selector": {
@@ -1027,6 +1037,9 @@
       },
       "low_soc": {
         "name": "Promemoria Batteria Bassa"
+      },
+      "notify_daily": {
+        "name": "Riepilogo Giornaliero"
       },
       "charge_sched": {
         "name": "Carica Programmata"
