@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4 - 2026-11-12
+
+- Fix pannello: `_drawByd` chiamava `this._t(...)` ma `_t` è una funzione di
+  modulo, non un metodo → `TypeError: this._t is not a function` e pannello in
+  errore. Ora usa `_t(...)`.
+
 ## 1.0.3 - 2026-11-12
 
 - Eliminati gli avvisi di deprecazione del `climate`: usati

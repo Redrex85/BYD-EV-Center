@@ -20,7 +20,7 @@
  */
 
 /** Versione compilata: usata per l'auto-refresh quando l'integrazione viene aggiornata. */
-const BYD_VER = "1.0.3";
+const BYD_VER = "1.0.4";
 let _recVerChecked = false;
 
 // --- i18n del pannello: lingua da hass.language (IT base, EN/FR). ES/DE in arrivo ---
@@ -4076,15 +4076,15 @@ class BydEvCenterPanel extends HTMLElement {
     const set = (k, v) => {
       root.querySelectorAll(`[data-byd="${k}"]`).forEach((el) => { el.textContent = (v === null || v === undefined || v === "") ? "—" : String(v); });
     };
-    const yes = this._t("byd_yes", "Sì");
-    const no = this._t("byd_no", "No");
+    const yes = _t("byd_yes", "Sì");
+    const no = _t("byd_no", "No");
     const onOff = (key) => {
       const s = this._bydState(key);
       return s ? (s.state === "on" ? yes : no) : null;
     };
     const openClosed = (key) => {
       const s = this._bydState(key);
-      return s ? (s.state === "on" ? this._t("byd_open", "Aperte") : this._t("byd_closed", "Chiuse")) : null;
+      return s ? (s.state === "on" ? _t("byd_open", "Aperte") : _t("byd_closed", "Chiuse")) : null;
     };
     set("model", this._ov("model") || this._cfg.name);
     set("online", onOff("byd_online"));
