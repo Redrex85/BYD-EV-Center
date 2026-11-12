@@ -88,8 +88,7 @@ async def async_register_static(hass: HomeAssistant) -> None:
 
 async def register_card_resource(hass: HomeAssistant) -> None:
     """Registra le card come risorse Lovelace, con cache-busting e pulizia vecchie URL."""
-    lovelace = hass.data.get("lovelace")
-    resources = getattr(lovelace, "resources", None)
+    resources = _get_resources(hass)
     if resources is None or not hasattr(resources, "async_create_item"):
         _LOGGER.warning(
             "Registro risorse Lovelace non trovato: registra le card a mano "
@@ -187,8 +186,22 @@ async def _notify_fallback(hass: HomeAssistant, name: str, path: str) -> None:
 
 def _get_dashboards(hass: HomeAssistant):
     """Registro dashboard: dict {url_path: LovelaceStorage} (HA nuova) o collection (HA vecchia)."""
-    lovelace_data = hass.data.get("lovelace")
-    return getattr(lovelace_data, "dashboards", None) if lovelace_data is not None else None
+    data = hass.data.get("lovelace")
+    if data is None:
+        return None
+    if isinstance(data, dict):
+        return data.get("dashboards")
+    return getattr(data, "dashboards", None)
+
+
+def _get_resources(hass: HomeAssistant):
+    """Registro risorse Lovelace, sia dict (HA nuova) sia oggetto (HA vecchia)."""
+    data = hass.data.get("lovelace")
+    if data is None:
+        return None
+    if isinstance(data, dict):
+        return data.get("resources")
+    return getattr(data, "resources", None)
 
 
 async def _create_new_api(hass: HomeAssistant, dashboards: dict, url_path: str, title: str):

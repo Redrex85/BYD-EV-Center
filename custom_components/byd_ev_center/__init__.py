@@ -105,6 +105,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # asset (pannello/card/foto) PRIMA della dashboard: la pagina deve trovare
+    # la risorsa gia' servita al primo caricamento
+    try:
+        await async_register_static(hass)
+        await register_card_resource(hass)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Card non registrata: %s", err)
+
     # foto del modello + dashboard automatica nella barra laterale
     if opts.get(CONF_CREATE_DASHBOARD, True):
         try:
@@ -112,11 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                                         coordinator.version)
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Dashboard automatica non creata: %s", err)
-    try:
-        await async_register_static(hass)
-        await register_card_resource(hass)
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("Card non registrata: %s", err)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 

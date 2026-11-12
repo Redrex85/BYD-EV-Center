@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.2 - 2026-11-12
+
+- Fix **errore di configurazione** all'apertura della dashboard: le risorse
+  Lovelace ora vengono lette sia dal formato dict (Home Assistant recente) sia
+  dall'oggetto (versioni precedenti); prima, su HA recente, il pannello non
+  veniva registrato e la card risultava sconosciuta.
+- Pannello e card registrati **prima** della creazione della dashboard, così la
+  prima apertura trova subito gli asset.
+
 ## 1.0.1 - 2026-11-12
 
 - Icona e logo custom: ovale rosso con wordmark **EV** inclinato, nello stile
