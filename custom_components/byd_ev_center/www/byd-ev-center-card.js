@@ -18,7 +18,7 @@
  *   range_entity: sensor.battery_autonomy
  *   odometer_entity: sensor.mileage
  */
-const CARD_VER = "1.0.0";
+const CARD_VER = "1.0.1";
 let _cardVerChecked = false;
 
 class BydEvCenterCard extends HTMLElement {

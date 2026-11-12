@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 - 2026-11-12
+
+- Icona e logo custom: ovale rosso con wordmark **EV** inclinato, nello stile
+  del marchio originale ma distinto.
+- Asset `brand/` aggiornati (icon 256/512, logo 652/1307 px).
+
 ## 1.0.0 - 2026-11-12
 
 Prima release di **BYD EV Center**.
