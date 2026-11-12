@@ -20,7 +20,7 @@
  */
 
 /** Versione compilata: usata per l'auto-refresh quando l'integrazione viene aggiornata. */
-const BYD_VER = "1.0.5";
+const BYD_VER = "1.0.6";
 let _recVerChecked = false;
 
 // --- i18n del pannello: lingua da hass.language (IT base, EN/FR). ES/DE in arrivo ---
@@ -245,19 +245,20 @@ const I18N = {
     btn_notify_save: "💾 Save texts",
     note_nt_vars: "Variables: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Empty = default text.",
     toast_notify_saved: "💾 Texts saved",
-    nt_cs: "Charge start",
-    nt_cc: "Charge end",
-    nt_lb: "Low battery",
-    nt_sum: "Summary",
-    nt_dead: "Deadlines",
-    nt_bal: "Home balance",
-    nt_sol: "Solar balance",
-    nt_gse_stop: "GSE pause",
-    nt_gse_go: "GSE resume",
-    nt_auto_start: "Auto start",
-    lbl_notify_test: "Test notifications (to yourself)",
-    note_nt_test: "One button per type: sends a test message to the configured notify service.",
-    toast_notify_test: "✅ Test sent",
+    nt_cs: "🟢 Charge start",
+    nt_cc: "🔋 Charge end",
+    nt_lb: "⚠️ Low battery",
+    nt_sum: "📊 Daily summary",
+    nt_dead: "🛡️ Deadlines",
+    nt_bal: "🏠 Home balancing",
+    nt_sol: "☀️ Solar balancing",
+    nt_gse_stop: "⛔ GSE stop",
+    nt_gse_go: "▶️ GSE resume",
+    nt_auto_start: "⏰ Scheduled start",
+    lbl_attiva_notifiche: "Enable notifications (choose which to receive)",
+    note_nt_test: "Toggle = you receive the notification; Test button = sends the sample message.",
+    btn_test: "Test",
+    toast_notify_test: "✅ Test notification sent",
     h3_backup: "💾 Data backup",
     btn_export_data: "⬇️ Export all data",
     btn_import_data: "⬆️ Import from file",
@@ -527,19 +528,20 @@ const I18N = {
     btn_notify_save: "💾 Enregistrer les textes",
     note_nt_vars: "Variables : {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vide = texte par défaut.",
     toast_notify_saved: "💾 Textes enregistrés",
-    nt_cs: "Début recharge",
-    nt_cc: "Fin recharge",
-    nt_lb: "Batterie faible",
-    nt_sum: "Résumé",
-    nt_dead: "Échéances",
-    nt_bal: "Équilibrage maison",
-    nt_sol: "Équilibrage solaire",
-    nt_gse_stop: "GSE pause",
-    nt_gse_go: "GSE reprise",
-    nt_auto_start: "Démarrage auto",
-    lbl_notify_test: "Tester les notifications (vers vous-même)",
-    note_nt_test: "Un bouton par type : envoie un message de test au service notify configuré.",
-    toast_notify_test: "✅ Test envoyé",
+    nt_cs: "🟢 Début recharge",
+    nt_cc: "🔋 Fin recharge",
+    nt_lb: "⚠️ Batterie faible",
+    nt_sum: "📊 Résumé quotidien",
+    nt_dead: "🛡️ Échéances",
+    nt_bal: "🏠 Équilibrage maison",
+    nt_sol: "☀️ Équilibrage solaire",
+    nt_gse_stop: "⛔ GSE arrêt",
+    nt_gse_go: "▶️ GSE reprise",
+    nt_auto_start: "⏰ Démarrage programmé",
+    lbl_attiva_notifiche: "Activer les notifications (choisissez celles à recevoir)",
+    note_nt_test: "Interrupteur = vous recevez la notification ; bouton Test = envoie le message d'exemple.",
+    btn_test: "Test",
+    toast_notify_test: "✅ Notification de test envoyée",
     h3_backup: "💾 Sauvegarde",
     btn_export_data: "⬇️ Exporter toutes les données",
     btn_import_data: "⬆️ Importer depuis un fichier",
@@ -818,19 +820,20 @@ const I18N = {
     btn_notify_save: "💾 Guardar textos",
     note_nt_vars: "Variables: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vacío = texto por defecto.",
     toast_notify_saved: "💾 Textos guardados",
-    nt_cs: "Inicio recarga",
-    nt_cc: "Fin recarga",
-    nt_lb: "Batería baja",
-    nt_sum: "Resumen",
-    nt_dead: "Vencimientos",
-    nt_bal: "Balance casa",
-    nt_sol: "Balance solar",
-    nt_gse_stop: "GSE pausa",
-    nt_gse_go: "GSE reanudar",
-    nt_auto_start: "Inicio auto",
-    lbl_notify_test: "Probar notificaciones (a ti mismo)",
-    note_nt_test: "Un botón por tipo: envía un mensaje de prueba al servicio notify configurado.",
-    toast_notify_test: "✅ Test enviado",
+    nt_cs: "🟢 Inicio recarga",
+    nt_cc: "🔋 Fin recarga",
+    nt_lb: "⚠️ Batería baja",
+    nt_sum: "📊 Resumen diario",
+    nt_dead: "🛡️ Vencimientos",
+    nt_bal: "🏠 Balance casa",
+    nt_sol: "☀️ Balance solar",
+    nt_gse_stop: "⛔ GSE parada",
+    nt_gse_go: "▶️ GSE reanudar",
+    nt_auto_start: "⏰ Inicio programado",
+    lbl_attiva_notifiche: "Activar notificaciones (elige cuáles recibir)",
+    note_nt_test: "Interruptor = recibes la notificación; botón Probar = envía el mensaje de ejemplo.",
+    btn_test: "Probar",
+    toast_notify_test: "✅ Notificación de prueba enviada",
     h3_backup: "💾 Copia de datos",
     btn_export_data: "⬇️ Exportar todos los datos",
     btn_import_data: "⬆️ Importar desde archivo",
@@ -1109,19 +1112,20 @@ const I18N = {
     btn_notify_save: "💾 Texte speichern",
     note_nt_vars: "Variablen: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Leer = Standardtext.",
     toast_notify_saved: "💾 Texte gespeichert",
-    nt_cs: "Ladestart",
-    nt_cc: "Ladeende",
-    nt_lb: "Batterie schwach",
-    nt_sum: "Zusammenfassung",
-    nt_dead: "Fristen",
-    nt_bal: "Haus-Balance",
-    nt_sol: "Solar-Balance",
-    nt_gse_stop: "GSE Pause",
-    nt_gse_go: "GSE Fortsetzen",
-    nt_auto_start: "Auto-Start",
-    lbl_notify_test: "Benachrichtigungen testen (an dich selbst)",
-    note_nt_test: "Ein Button pro Typ: sendet eine Testnachricht an den konfigurierten notify-Dienst.",
-    toast_notify_test: "✅ Test gesendet",
+    nt_cs: "🟢 Ladestart",
+    nt_cc: "🔋 Ladeende",
+    nt_lb: "⚠️ Batterie schwach",
+    nt_sum: "📊 Tageszusammenfassung",
+    nt_dead: "🛡️ Fristen",
+    nt_bal: "🏠 Haus-Balancing",
+    nt_sol: "☀️ Solar-Balancing",
+    nt_gse_stop: "⛔ GSE Stopp",
+    nt_gse_go: "▶️ GSE Fortsetzen",
+    nt_auto_start: "⏰ Geplanter Start",
+    lbl_attiva_notifiche: "Benachrichtigungen aktivieren (wähle welche du erhältst)",
+    note_nt_test: "Schalter = du erhältst die Benachrichtigung; Test-Button = sendet die Beispielnachricht.",
+    btn_test: "Test",
+    toast_notify_test: "✅ Testbenachrichtigung gesendet",
     h3_backup: "💾 Daten-Backup",
     btn_export_data: "⬇️ Alle Daten exportieren",
     btn_import_data: "⬆️ Aus Datei importieren",
@@ -3339,6 +3343,14 @@ class BydEvCenterPanel extends HTMLElement {
       case "sw_start": return S._swid("notifica_avvio_ricarica");
       case "sw_end": return S._swid("notifica_fine_ricarica");
       case "sw_low": return S._swid("promemoria_batteria_bassa");
+      case "nt_cs": return S._swid("notifica_avvio_ricarica");
+      case "nt_cc": return S._swid("notifica_fine_ricarica");
+      case "nt_lb": return S._swid("promemoria_batteria_bassa");
+      case "nt_sum": return S._swid("riepilogo_giornaliero");
+      case "nt_dead": return S._swid("notifica_scadenze");
+      case "nt_bal": return S._swid("notifica_bilanciamento_casa");
+      case "nt_sol": return S._swid("notifica_bilanciamento_solare");
+      case "nt_gse": return S._swid("notifica_gse");
       case "sw_sched": return S._swid("carica_programmata");
       case "sw_bal": return S._swid("bilanciamento_solare");
       case "sw_night": return S._swid("batteria_solo_senza_sole");
@@ -5681,10 +5693,16 @@ const THEMES = [
   ["verde", "#57b98a", "🟢 Verde R4"], ["aviation", "#c9d4e2", "⚪ Grigio Aviation"],
 ];
 const NT_TYPES = [
-  ["cs", "Avvio ricarica"], ["cc", "Fine ricarica"], ["lb", "Batteria bassa"],
-  ["sum", "Riepilogo"], ["dead", "Scadenze"], ["bal", "Bilancio casa"],
-  ["sol", "Bilancio solare"], ["gse_stop", "GSE pausa"], ["gse_go", "GSE ripresa"],
-  ["auto_start", "Avvio auto"],
+  ["cs", "🟢 Avvio ricarica", "nt_cs"],
+  ["cc", "🔋 Fine ricarica", "nt_cc"],
+  ["lb", "⚠️ Batteria bassa", "nt_lb"],
+  ["sum", "📊 Riepilogo giornaliero", "nt_sum"],
+  ["dead", "🛡️ Scadenze", "nt_dead"],
+  ["bal", "🏠 Bilanciamento casa", "nt_bal"],
+  ["sol", "☀️ Bilanciamento solare", "nt_sol"],
+  ["gse_stop", "⛔ GSE stop", "nt_gse"],
+  ["gse_go", "▶️ GSE ripresa", "nt_gse"],
+  ["auto_start", "⏰ Avvio programmato", "nt_cs"],
 ];
 
 // NB: nome prefissato per NON ombreggiare window.CSS (romperebbe CSS.escape di altre card)
@@ -6302,12 +6320,11 @@ const PAGES = () => ({
       <div style="margin-top:8px;font-size:12px;color:var(--muted)">${_t("lbl_nt_end_body", "Messaggio fine ricarica")}</div>
       <textarea data-nt="cc_body" rows="5" style="width:100%;font-family:inherit;font-size:12px;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px" placeholder="${_t("ph_nt_body", "📍 {zona}\n⚡️ {kwh:.2f} kWh\n🕐 {durata:.2f} h\n📊 {soc0:.0f}% → {soc1:.0f}%\n💰 €{costo:.2f}")}"></textarea>
       <div class="btn" data-cmd="notify_save" style="margin-top:8px">${_t("btn_notify_save", "💾 Salva testi")}</div>
-      <div style="margin-top:12px;font-size:12px;color:var(--muted)">${_t("lbl_notify_test", "Prova notifiche (a te stesso)")}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-        ${NT_TYPES.map(([tipo, lbl]) => `<button class="btn" data-cmd="notify_test" data-ntype="${tipo}" style="padding:6px 10px;font-size:12px">${_t("nt_" + tipo, lbl)}</button>`).join("")}
+      <div style="margin-top:14px;font-size:12px;color:var(--muted)">${_t("lbl_attiva_notifiche", "Attiva notifiche (scegli quali ricevere)")}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+        ${NT_TYPES.map(([tipo, lbl, swk]) => `<div class="row" style="align-items:center;gap:8px"><label class="switch"><input type="checkbox" data-sw="${swk}"><span></span></label><span style="flex:1">${_t("nt_" + tipo, lbl)}</span><div class="btn" style="flex:0 0 auto;padding:5px 10px;font-size:11.5px" data-cmd="notify_test" data-ntype="${tipo}">${_t("btn_test", "Prova")}</div></div>`).join("")}
       </div>
-      <div style="color:var(--muted);font-size:11.5px;margin-top:6px">${_t("note_nt_test", "Un pulsante per ogni tipo: invia un messaggio di prova al servizio notify configurato.")}</div>
-      <div style="color:var(--muted);font-size:11.5px;margin-top:6px">${_t("note_nt_vars", "Variabili: {zona} {kwh} {durata} {soc0} {soc1} {costo}. Vuoto = testo predefinito.")}</div></div>
+      <div style="color:var(--muted);font-size:11.5px;margin-top:6px">${_t("note_nt_test", "Interruttore = ricevi la notifica; pulsante Prova = invia il messaggio di esempio.")}</div></div>
     <div class="card"><h3>${_t("h3_lingua", "🌐 Lingua")}</h3>
       <div class="inp"><span>${_t("lbl_lingua_pannello", "Lingua pannello")}</span>
         <select data-lang style="width:150px">

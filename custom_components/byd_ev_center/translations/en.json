@@ -1055,6 +1055,18 @@
       },
       "notify_daily": {
         "name": "Daily summary"
+      },
+      "notify_dead": {
+        "name": "Deadline notification"
+      },
+      "notify_bal": {
+        "name": "Home balancing notification"
+      },
+      "notify_sol": {
+        "name": "Solar balancing notification"
+      },
+      "notify_gse": {
+        "name": "GSE notification"
       }
     },
     "time": {

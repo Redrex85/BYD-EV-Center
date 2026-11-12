@@ -1041,6 +1041,18 @@
       "notify_daily": {
         "name": "Riepilogo Giornaliero"
       },
+      "notify_dead": {
+        "name": "Notifica Scadenze"
+      },
+      "notify_bal": {
+        "name": "Notifica Bilanciamento Casa"
+      },
+      "notify_sol": {
+        "name": "Notifica Bilanciamento Solare"
+      },
+      "notify_gse": {
+        "name": "Notifica GSE"
+      },
       "charge_sched": {
         "name": "Carica Programmata"
       },

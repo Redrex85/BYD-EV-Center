@@ -31,10 +31,14 @@ async def async_setup_entry(
         MateSwitch(coordinator, "home_balance", False, "mdi:home-lightning-bolt"),
         MateSwitch(coordinator, "battery_night_only", False, "mdi:weather-night"),
         MateSwitch(coordinator, "notify_daily", True, "mdi:calendar-today"),
+        MateSwitch(coordinator, "notify_dead", True, "mdi:calendar-alert"),
+        MateSwitch(coordinator, "notify_bal", True, "mdi:home-lightning-bolt"),
+        MateSwitch(coordinator, "notify_sol", True, "mdi:white-balance-sunny"),
     ]
     # lo switch GSE esiste solo se la sperimentazione è abilitata in configurazione
     if getattr(coordinator, "gse_enabled", False):
         entities.append(MateSwitch(coordinator, "gse", False, "mdi:transmission-tower"))
+        entities.append(MateSwitch(coordinator, "notify_gse", True, "mdi:transmission-tower-export"))
     async_add_entities(entities)
 
 

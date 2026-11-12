@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.6 - 2026-11-12
+
+- Pannello, card Notifiche: i pulsanti di prova ora hanno le etichette con
+  emoji (come nel progetto di riferimento) e, accanto a ciascuno, un
+  interruttore per attivare o disattivare quella singola notifica.
+- Nuovi switch: `Notifica Scadenze`, `Notifica Bilanciamento Casa`,
+  `Notifica Bilanciamento Solare` e `Notifica GSE`. Ogni notifica ora è
+  controllabile singolarmente; la fine ricarica rispetta `Notifica Fine
+  Ricarica` (prima era sempre inviata) e il bilanciamento solare non dipende
+  più dallo switch di avvio ricarica.
+- Etichette dei 10 pulsanti di prova tradotte in it/en/fr/es/de.
+
 ## 1.0.5 - 2026-11-12
 
 - Nuovo riepilogo giornaliero nativo: una notifica la sera (dopo le 21) con km,

@@ -1055,6 +1055,18 @@
       },
       "notify_daily": {
         "name": "Résumé quotidien"
+      },
+      "notify_dead": {
+        "name": "Notification échéances"
+      },
+      "notify_bal": {
+        "name": "Notification équilibrage maison"
+      },
+      "notify_sol": {
+        "name": "Notification équilibrage solaire"
+      },
+      "notify_gse": {
+        "name": "Notification GSE"
       }
     },
     "time": {

@@ -3304,7 +3304,7 @@ class BydMateCoordinator(DataUpdateCoordinator):
 
     async def _check_notifications(self, scadenze: list[dict], oggi) -> None:
         """Invia una notifica al giorno se una scadenza rientra nel preavviso."""
-        if not self.notify_service or not scadenze:
+        if not self.notify_service or not scadenze or not self._switch_on("notify_dead"):
             return
         counters = self.store.data["counters"]
         today_key = oggi.strftime("%Y-%m-%d")
@@ -3519,9 +3519,10 @@ class BydMateCoordinator(DataUpdateCoordinator):
                 self._gse_paused = True
                 self._gse_ok_since = None
                 await self._wb_charge(False, battery)
-                await self._send_notify(
-                    self._tr("gse_stop_title"),
-                    self._tr("gse_stop_msg", casa=round(house_w or 0), budget=round(budget_w)))
+                if self._switch_on("notify_gse"):
+                    await self._send_notify(
+                        self._tr("gse_stop_title"),
+                        self._tr("gse_stop_msg", casa=round(house_w or 0), budget=round(budget_w)))
             return
         # margine sufficiente: gestisci la ripresa dopo 30 min sotto soglia
         if getattr(self, "_gse_paused", False):
@@ -3535,8 +3536,9 @@ class BydMateCoordinator(DataUpdateCoordinator):
                 self._gse_paused = False
                 if wb_state not in WALLBOX_CHARGING_STATES:
                     await self._press_start()
-                    await self._send_notify(
-                        self._tr("gse_go_title"), self._tr("gse_go_msg"))
+                    if self._switch_on("notify_gse"):
+                        await self._send_notify(
+                            self._tr("gse_go_title"), self._tr("gse_go_msg"))
         if wb_state not in WALLBOX_CHARGING_STATES and not charging:
             return
         amps = max(int(round(avail_w / self.gse_wpa)), 6)
@@ -3630,7 +3632,7 @@ class BydMateCoordinator(DataUpdateCoordinator):
             self._balance_last_change = now_t
             _LOGGER.info("Bilanciamento solare: %s A → %s A (surplus %s W)",
                          amps_att, nuovi, round(surplus))
-            if self._switch_on("notify_start"):
+            if self._switch_on("notify_sol"):
                 await self._send_notify(
                     self._tr("sol_title"),
                     self._tr("sol_msg", rete=round(grid_w), surplus=round(surplus),
@@ -3702,10 +3704,11 @@ class BydMateCoordinator(DataUpdateCoordinator):
                 blocking=False,
             )
             _LOGGER.info("Bilanciamento casa: wallbox a %s A (%s)", amps, motivo)
-            await self._send_notify(
-                self._tr("bal_title"),
-                self._tr("bal_msg", cur=cur, amps=amps, motivo=motivo),
-            )
+            if self._switch_on("notify_bal"):
+                await self._send_notify(
+                    self._tr("bal_title"),
+                    self._tr("bal_msg", cur=cur, amps=amps, motivo=motivo),
+                )
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Bilanciamento casa: impostazione fallita: %s", err)
 
@@ -3721,7 +3724,7 @@ class BydMateCoordinator(DataUpdateCoordinator):
                          soc=data.get('battery')),
             )
         # --- fine ricarica: notifica NATIVA (nessuna automazione da creare) --------
-        if events.get("charge_finished"):
+        if events.get("charge_finished") and self._switch_on("notify_end"):
             rec = events["charge_finished"] or {}
             dur = _f(rec.get("durata_min")) / 60.0
             body = self._tr(

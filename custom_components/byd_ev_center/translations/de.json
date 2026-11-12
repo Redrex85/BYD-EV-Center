@@ -1055,6 +1055,18 @@
       },
       "notify_daily": {
         "name": "Tageszusammenfassung"
+      },
+      "notify_dead": {
+        "name": "Fristen-Benachrichtigung"
+      },
+      "notify_bal": {
+        "name": "Haus-Balancing-Benachrichtigung"
+      },
+      "notify_sol": {
+        "name": "Solar-Balancing-Benachrichtigung"
+      },
+      "notify_gse": {
+        "name": "GSE-Benachrichtigung"
       }
     },
     "time": {

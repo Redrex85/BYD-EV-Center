@@ -1055,6 +1055,18 @@
       },
       "notify_daily": {
         "name": "Resumen diario"
+      },
+      "notify_dead": {
+        "name": "Notificación vencimientos"
+      },
+      "notify_bal": {
+        "name": "Notificación balance casa"
+      },
+      "notify_sol": {
+        "name": "Notificación balance solar"
+      },
+      "notify_gse": {
+        "name": "Notificación GSE"
       }
     },
     "time": {
