@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.7 - 2026-11-12
+
+- Porta delle modifiche 1.1.28/1.1.29 del progetto di riferimento:
+  - pagina Automazioni: riquadro "Notifiche — attiva/disattiva" con gli
+    interruttori di riepilogo giornaliero, avvio/fine ricarica e batteria bassa;
+  - pagina Impostazioni compatta: card più dense, Esporta/Importa dati dentro
+    "Reset & export" (la card Backup dati separata è sparita), Zone ricariche,
+    Palette, Lingua e Notifiche su un solo rigo (grid g4), pulsanti di prova
+    con etichette emoji tradotte;
+  - CSS `.g4` + media query e classe `.compact`.
+- (Il gate `notify_end` sulla fine ricarica era già in 1.0.6.)
+
 ## 1.0.6 - 2026-11-12
 
 - Pannello, card Notifiche: i pulsanti di prova ora hanno le etichette con
