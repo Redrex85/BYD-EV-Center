@@ -1,0 +1,20 @@
+{
+  "domain": "byd_ev_center",
+  "name": "BYD EV Center",
+  "after_dependencies": [
+    "lovelace"
+  ],
+  "codeowners": [
+    "@Redrex85"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
+  "documentation": "https://github.com/Redrex85/BYD-EV-Center",
+  "integration_type": "device",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/Redrex85/BYD-EV-Center/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

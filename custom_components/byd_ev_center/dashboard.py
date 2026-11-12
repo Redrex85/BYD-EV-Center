@@ -1,0 +1,461 @@
+"""Creazione automatica della dashboard laterale e della foto dell'auto."""
+from __future__ import annotations
+
+import json
+import logging
+import os
+import re
+from typing import Any
+
+from homeassistant.components import frontend
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.util import slugify as _ha_slugify
+
+from .const import DOMAIN, CONF_AC_BUTTON, CONF_CHARGE_START_BUTTON, CONF_CLIMATE_ENTITY
+from .const import (
+    CONF_BATTERY_LEVEL, CONF_CHARGING_ENTITY, CONF_ODOMETER, CONF_RANGE,
+    CONF_LOCATION_ENTITY, CONF_LIGHT_ENTITY, CONF_HORN_ENTITY, CONF_WB_STOP_SWITCH,
+    CONF_WB_POWER, CONF_WB_STATE, CONF_WB_SESSION_ENERGY, CONF_WB_TOTAL_ENERGY,
+    CONF_WB_MAX_CURRENT, CONF_WB_CHARGE_SWITCH,
+    CONF_BYD_ONLINE, CONF_BYD_LOCKED, CONF_BYD_DOORS, CONF_BYD_WINDOWS,
+    CONF_BYD_VEHICLE_STATE, CONF_BYD_CABIN_TEMP, CONF_BYD_OUTSIDE_TEMP,
+    CONF_BYD_BATTERY_POWER, CONF_BYD_CHARGE_REMAINING, CONF_BYD_TOTAL_ENERGY,
+    CONF_BYD_RECENT_ENERGY, CONF_BYD_LAST_SEEN, CONF_BYD_TIRE_FL, CONF_BYD_TIRE_FR,
+    CONF_BYD_TIRE_RL, CONF_BYD_TIRE_RR, CONF_BYD_VIN,
+    CONF_WALLBOX_ENABLED, CONF_PROFILE,
+)
+from .byd_sources import resolve_model
+
+_LOGGER = logging.getLogger(__name__)
+
+# asset serviti DIRETTAMENTE dalla cartella dell'integrazione (mai /config/www)
+WWW_DIR = "byd_ev_center"
+JS_URL = f"/{WWW_DIR}/www"
+IMG_URL = f"/{WWW_DIR}/images"
+
+# modelli senza foto dedicata → file immagine alternativo
+_IMAGE_ALIASES: dict[str, str] = {
+    "seal_u": "seal",
+}
+LEGACY_DIR = "byd-ev-center"   # vecchia /local/byd-ev-center (solo per la pulizia)
+
+
+def slugify(text: str) -> str:
+    # STESSO slug che HA usa per gli entity_id: la funzione locale prima
+    # cancellava i trattini invece di renderli "_" ("Clio E-Tech" -> "clio_etech"
+    # invece di "clio_e_tech") e il campo car: della card non trovava i fallback.
+    return _ha_slugify(str(text or ""))
+
+
+def entry_name(entry: ConfigEntry) -> str:
+    """Nome auto con la STESSA risoluzione usata dalle piattaforme.
+
+    `entry.data` non ha sempre la chiave "name": in quel caso le piattaforme
+    cadono su `entry.title`, mentre un default fisso qui ("BYD") produceva
+    un prefisso diverso e la dashboard cercava `sensor.<altro>_…` inesistenti →
+    pannello tutto vuoto pur con i sensori popolati.
+    """
+    return str(entry.data.get("name") or entry.title or "BYD")
+
+
+def _pkg_dir(*parts: str) -> str:
+    return os.path.join(os.path.dirname(__file__), *parts)
+
+
+def _version() -> str:
+    try:
+        with open(_pkg_dir("manifest.json"), encoding="utf-8") as fh:
+            return str(json.load(fh).get("version", "dev"))
+    except Exception:  # noqa: BLE001
+        return "dev"
+
+
+async def async_register_static(hass: HomeAssistant) -> None:
+    """Serve card e immagini dalla cartella dell'integrazione (nessuna copia in /config/www)."""
+    from homeassistant.components.http import StaticPathConfig
+
+    paths = [
+        StaticPathConfig(JS_URL, _pkg_dir("www"), cache_headers=False),
+        StaticPathConfig(IMG_URL, _pkg_dir("images"), cache_headers=False),
+    ]
+    try:
+        await hass.http.async_register_static_paths(paths)
+        _LOGGER.debug("Asset statici registrati: %s e %s", JS_URL, IMG_URL)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Impossibile registrare gli asset statici: %s", err)
+
+
+async def register_card_resource(hass: HomeAssistant) -> None:
+    """Registra le card come risorse Lovelace, con cache-busting e pulizia vecchie URL."""
+    lovelace = hass.data.get("lovelace")
+    resources = getattr(lovelace, "resources", None)
+    if resources is None or not hasattr(resources, "async_create_item"):
+        _LOGGER.warning(
+            "Registro risorse Lovelace non trovato: registra le card a mano "
+            "(Impostazioni → Dashboard → ⋮ → Risorse → %s/byd-ev-center-card.js "
+            "e %s/byd-ev-center-panel.js)",
+            JS_URL, JS_URL,
+        )
+        return
+    ver = await hass.async_add_executor_job(_version)
+    for fn in ("byd-ev-center-card.js", "byd-ev-center-panel.js"):
+        base = f"{JS_URL}/{fn}"
+        url = f"{base}?v={ver}"
+        try:
+            items = list(resources.async_items())
+            for item in items:
+                old = item.get("url") or ""
+                # vecchia risorsa in /local/... o versione superata della nuova URL
+                if (old.startswith(f"/local/{LEGACY_DIR}/") or old == base
+                        or (old.startswith(f"{base}?v=") and old != url)):
+                    item_id = item.get("id")
+                    if item_id and hasattr(resources, "async_delete_item"):
+                        await resources.async_delete_item(item_id)
+            if not any(item.get("url") == url for item in resources.async_items()):
+                await resources.async_create_item({"res_type": "js", "url": url})
+                _LOGGER.info("Risorsa card registrata: %s", url)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Registrazione risorsa %s fallita: %s", url, err)
+
+
+def car_image_url(entry: ConfigEntry) -> str:
+    """URL della foto del modello, servita dalla cartella dell'integrazione."""
+    # il modello può stare in entry.data (setup iniziale) O in entry.options
+    # (flusso «Configura»): leggere solo data faceva cadere sul default "Custom"
+    # → copiava la macchinina generica anche per chi aveva scelto il modello.
+    model = resolve_model({**(entry.data or {}), **(entry.options or {})})
+    slug = slugify(model)
+    # modelli senza foto dedicata riusano quella della variante piu simile
+    slug = _IMAGE_ALIASES.get(slug, slug)
+    src = _pkg_dir("images", f"{slug}.png")
+    if not os.path.isfile(src):
+        _LOGGER.info("Nessuna immagine per il modello %s: uso quella generica", model)
+        return f"{IMG_URL}/custom.png"
+    return f"{IMG_URL}/{slug}.png"
+
+
+def _panel_view(name: str, image: str | None, overrides: dict[str, Any] | None = None,
+                version: str = "", opts_wb: bool = True,
+                opts_profile: str = "") -> dict[str, Any]:
+    """Vista unica tipo panel: una sola card custom full-width."""
+    card: dict[str, Any] = {
+        "type": "custom:byd-ev-center-panel",
+        "name": name,
+        "car": slugify(name),
+        "image": f"{IMG_URL}/custom.png",
+        "version": version,
+        # il pannello usa questi per nascondere le parti non attive (profilo base/pro)
+        "wallbox": bool(opts_wb),
+        "profile": opts_profile,
+    }
+    if image:
+        card["image"] = image
+    if overrides:
+        card["overrides"] = overrides
+    return {"title": f"{name} EV Center", "path": "ev-center", "type": "panel",
+            "cards": [card]}
+
+
+def _export_yaml_fallback(hass: HomeAssistant, name: str, views: list[dict[str, Any]]) -> str:
+    """Scrive il dashboard completo pronto da incollare (piano B)."""
+    import yaml
+
+    path = hass.config.path(f"byd-ev-center_{slugify(name)}_dashboard.yaml")
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.dump({"title": f"{name} EV Center", "views": views}, fh,
+                  allow_unicode=True, sort_keys=False)
+    return path
+
+
+async def _notify_fallback(hass: HomeAssistant, name: str, path: str) -> None:
+    await hass.services.async_call(
+        "persistent_notification", "create",
+        {
+            "title": "BYD EV Center — Dashboard da creare a mano",
+            "message": (
+                f"La creazione automatica non è riuscita su questa versione di HA.\n"
+                f"1) Impostazioni → Dashboard → Aggiungi dashboard → nome '{name} EV Center'\n"
+                f"2) Aprila → matita → ⋮ → 'Modifica configurazione UI in YAML'\n"
+                f"3) Incolla il contenuto del file: {path}"
+            ),
+            "notification_id": f"byd_ev_center_dashboard_{slugify(name)}",
+        },
+        blocking=False,
+    )
+
+
+def _get_dashboards(hass: HomeAssistant):
+    """Registro dashboard: dict {url_path: LovelaceStorage} (HA nuova) o collection (HA vecchia)."""
+    lovelace_data = hass.data.get("lovelace")
+    return getattr(lovelace_data, "dashboards", None) if lovelace_data is not None else None
+
+
+async def _create_new_api(hass: HomeAssistant, dashboards: dict, url_path: str, title: str):
+    """HA ≥ 2025.9: crea la voce dashboard e registra panel + store in memoria.
+
+    ponytail: la collection di lovelace non è esposta in hass.data, quindi si
+    usa un'istanza propria che scrive .storage/lovelace_dashboards; se l'utente
+    modifica altre dashboard nella stessa sessione il save di quella collection
+    può scartare la voce — al riavvio di HA il pannello ricompare.
+    """
+    try:
+        from homeassistant.components.lovelace.dashboard import (
+            DashboardsCollection,
+            LovelaceStorage,
+        )
+    except ImportError:  # struttura moduli diversa in altre versioni HA
+        _LOGGER.warning("Modulo lovelace.dashboard non disponibile: uso il piano B")
+        return None
+    try:
+        coll = DashboardsCollection(hass)
+        await coll.async_load()
+        item = next(
+            (it for it in coll.async_items() if it.get("url_path") == url_path),
+            None,
+        )
+        if item is None:
+            if frontend.async_panel_exists(hass, url_path):
+                # pannello orfano di un tentativo precedente senza item salvato:
+                # async_create_item alzerebbe "url_already_exists" → rimuovilo
+                try:
+                    frontend.async_remove_panel(hass, url_path)
+                except TypeError:  # signature senza warn_if_unknown
+                    frontend.async_remove_panel(hass, url_path)
+            item = await coll.async_create_item(
+                {
+                    "title": title,
+                    "icon": "mdi:car-electric",
+                    "url_path": url_path,
+                    "show_in_sidebar": True,
+                }
+            )
+        store = LovelaceStorage(hass, dict(item))
+        if not frontend.async_panel_exists(hass, url_path):
+            frontend.async_register_built_in_panel(
+                hass,
+                "lovelace",
+                sidebar_title=title,
+                sidebar_icon="mdi:car-electric",
+                frontend_url_path=url_path,
+                show_in_sidebar=True,
+            )
+        dashboards[url_path] = store
+        _LOGGER.info("Dashboard '%s' creata nella barra laterale", title)
+        return store
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.error("Creazione dashboard fallita: %s — uso il piano B", err)
+        return None
+
+
+_DASH_PREFIX = "byd-ev-center-"
+
+
+def _byd_dash_paths(dashboards: Any) -> list[str]:
+    """url_path di TUTTE le dashboard laterali create da noi."""
+    try:
+        if isinstance(dashboards, dict):
+            return [str(k) for k in dashboards if str(k).startswith(_DASH_PREFIX)]
+        if hasattr(dashboards, "async_items"):
+            return [str(i.get("url_path") or "") for i in dashboards.async_items()
+                    if str(i.get("url_path") or "").startswith(_DASH_PREFIX)]
+    except Exception:  # noqa: BLE001
+        return []
+    return []
+
+
+async def _purge_orphans(hass: HomeAssistant, keep: str) -> None:
+    """Cancella le dashboard laterali create con un nome di entry precedente.
+
+    Rinominare l'entry cambia lo `url_path`: la vecchia restava in sidebar e
+    l'utente apriva quella, che non aveva i sensori nuovi.
+    """
+    if len(hass.config_entries.async_entries(DOMAIN)) != 1:
+        # con piu' entry la regola "una sola per installazione" non regge:
+        # ognuna si ricreerebbe cancellando quella dell'altra a ogni avvio.
+        return
+    dashboards = _get_dashboards(hass)
+    if dashboards is None:
+        return
+    for old in _byd_dash_paths(dashboards):
+        if not old or old == keep:
+            continue
+        try:
+            await async_remove_dashboard(hass, old[len(_DASH_PREFIX):])
+            _LOGGER.info("Dashboard orfana rimossa: %s", old)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Rimozione dashboard orfana '%s' fallita: %s", old, err)
+
+
+async def async_setup_dashboard(hass: HomeAssistant, entry: ConfigEntry, name: str,
+                                version: str = "") -> None:
+    """Crea (una sola volta) la dashboard laterale con la vista panel."""
+    url_path = f"byd-ev-center-{slugify(name)}"
+    title = f"{name} EV Center"
+    opts = {**entry.data, **entry.options}
+    _ov = {
+        # entità scelte nel wizard: il pannello le usa PRIMA dei fallback _car(),
+        # che presumono che il device BYD ufficiale si chiami come l'entry
+        # (es. device `gy966mh` ≠ entry "BYD" → prima erano tutte vuote)
+        "battery": opts.get(CONF_BATTERY_LEVEL),
+        "range": opts.get(CONF_RANGE),
+        "odometer": opts.get(CONF_ODOMETER),
+        "charging": opts.get(CONF_CHARGING_ENTITY),
+        "start_charge": opts.get(CONF_CHARGE_START_BUTTON),
+        "ac_button": opts.get(CONF_AC_BUTTON),
+        "climate": opts.get(CONF_CLIMATE_ENTITY),
+        "light": opts.get(CONF_LIGHT_ENTITY),
+        "horn": opts.get(CONF_HORN_ENTITY),
+        "location": opts.get(CONF_LOCATION_ENTITY),
+        "wallbox_power": opts.get(CONF_WB_POWER),
+        "wallbox_state": opts.get(CONF_WB_STATE),
+        "wallbox_session_energy": opts.get(CONF_WB_SESSION_ENERGY),
+        "wallbox_total_energy": opts.get(CONF_WB_TOTAL_ENERGY),
+        "wallbox_max_current": opts.get(CONF_WB_MAX_CURRENT),
+        "wb_charge_switch": opts.get(CONF_WB_CHARGE_SWITCH),
+        "wb_stop_switch": opts.get(CONF_WB_STOP_SWITCH),
+        "wallbox_temperature": opts.get("wallbox_temp_entity"),
+        # dati nativi BYD per la pagina «BYD Veicolo»
+        "model": resolve_model(opts),
+        "byd_vin": opts.get(CONF_BYD_VIN),
+        "byd_online": opts.get(CONF_BYD_ONLINE),
+        "byd_locked": opts.get(CONF_BYD_LOCKED),
+        "byd_doors": opts.get(CONF_BYD_DOORS),
+        "byd_windows": opts.get(CONF_BYD_WINDOWS),
+        "byd_vehicle_state": opts.get(CONF_BYD_VEHICLE_STATE),
+        "byd_cabin_temp": opts.get(CONF_BYD_CABIN_TEMP),
+        "byd_outside_temp": opts.get(CONF_BYD_OUTSIDE_TEMP),
+        "byd_battery_power": opts.get(CONF_BYD_BATTERY_POWER),
+        "byd_charge_remaining": opts.get(CONF_BYD_CHARGE_REMAINING),
+        "byd_total_energy": opts.get(CONF_BYD_TOTAL_ENERGY),
+        "byd_recent_energy": opts.get(CONF_BYD_RECENT_ENERGY),
+        "byd_last_seen": opts.get(CONF_BYD_LAST_SEEN),
+        "byd_tire_fl": opts.get(CONF_BYD_TIRE_FL),
+        "byd_tire_fr": opts.get(CONF_BYD_TIRE_FR),
+        "byd_tire_rl": opts.get(CONF_BYD_TIRE_RL),
+        "byd_tire_rr": opts.get(CONF_BYD_TIRE_RR),
+    }
+    overrides = {k: v for k, v in _ov.items() if v}
+    views = [_panel_view(name, car_image_url(entry), overrides, version,
+                         bool(opts.get(CONF_WALLBOX_ENABLED, True)),
+                         str(opts.get(CONF_PROFILE) or ""))]
+
+    async def piano_b() -> None:
+        path = await hass.async_add_executor_job(_export_yaml_fallback, hass, name, views)
+        await _notify_fallback(hass, name, path)
+
+    dashboards = _get_dashboards(hass)
+    if dashboards is None:
+        _LOGGER.warning("Lovelace non in modalità storage: uso il piano B")
+        await piano_b()
+        return
+
+    store = None
+    if isinstance(dashboards, dict):
+        # HA ≥ 2025.9: {url_path: LovelaceStorage} già popolato al boot
+        store = dashboards.get(url_path)
+        if store is None:
+            store = await _create_new_api(hass, dashboards, url_path, title)
+    elif hasattr(dashboards, "async_create_item"):
+        # HA vecchie: DashboardsCollection, listener ufficiale registra il panel
+        già_presente = False
+        try:
+            for item in dashboards.async_items():
+                if item.get("url_path") == url_path:
+                    già_presente = True
+                    break
+        except Exception:  # noqa: BLE001
+            pass
+        if not già_presente:
+            try:
+                res = dashboards.async_create_item(
+                    {
+                        "title": title,
+                        "icon": "mdi:car-electric",
+                        "url_path": url_path,
+                        "show_in_sidebar": True,
+                        "mode": "storage",
+                    }
+                )
+                if hasattr(res, "__await__"):
+                    await res
+                _LOGGER.info("Dashboard '%s' creata nella barra laterale", title)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Creazione dashboard fallita: %s — uso il piano B", err)
+                await piano_b()
+                return
+        for getter in ("async_get_or_create", "async_get", "async_get_item"):
+            fn = getattr(dashboards, getter, None)
+            if fn is None:
+                continue
+            try:
+                res = fn(url_path)
+                if hasattr(res, "__await__"):
+                    res = await res
+                if res is not None and hasattr(res, "async_save"):
+                    store = res
+                    break
+            except Exception:  # noqa: BLE001
+                continue
+
+    if store is None or not hasattr(store, "async_save"):
+        _LOGGER.error("Store della dashboard non trovato — uso il piano B")
+        await piano_b()
+        return
+
+    try:
+        await store.async_save({"views": views})
+        _LOGGER.info("Dashboard '%s': salvate %d viste", title, len(views))
+        await _purge_orphans(hass, url_path)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.error("Salvataggio viste fallito: %s — uso il piano B", err)
+        await piano_b()
+
+
+async def async_remove_dashboard(hass: HomeAssistant, name: str) -> None:
+    """Rimuove la dashboard laterale creata dall'integrazione."""
+    url_path = f"byd-ev-center-{slugify(name)}"
+    dashboards = _get_dashboards(hass)
+    if dashboards is None:
+        return
+
+    if isinstance(dashboards, dict):
+        # HA ≥ 2025.9: dict {url_path: LovelaceStorage}
+        store = dashboards.pop(url_path, None)
+        if store is not None:
+            try:
+                await store.async_delete()
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Rimozione store dashboard fallita: %s", err)
+            try:
+                frontend.async_remove_panel(hass, url_path, warn_if_unknown=False)
+            except TypeError:  # signature senza warn_if_unknown
+                frontend.async_remove_panel(hass, url_path)
+            _LOGGER.info("Dashboard '%s' rimossa", url_path)
+        try:
+            from homeassistant.components.lovelace.dashboard import DashboardsCollection
+            coll = DashboardsCollection(hass)
+            await coll.async_load()
+            for iid, it in list(coll.data.items()):
+                if it.get("url_path") == url_path:
+                    await coll.async_delete_item(iid)
+                    break
+        except ImportError:
+            pass
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Rimozione voce da lovelace_dashboards fallita: %s", err)
+        return
+
+    if hasattr(dashboards, "async_delete_item"):
+        # HA vecchie: collection con listener ufficiale
+        try:
+            for item in list(dashboards.async_items()):
+                if item.get("url_path") == url_path:
+                    res = dashboards.async_delete_item(item["id"])
+                    if hasattr(res, "__await__"):
+                        await res
+                    break
+            frontend.async_remove_panel(hass, url_path)
+            _LOGGER.info("Dashboard '%s' rimossa", url_path)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Rimozione dashboard fallita: %s", err)

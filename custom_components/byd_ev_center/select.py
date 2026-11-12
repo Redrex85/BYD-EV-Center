@@ -1,0 +1,93 @@
+"""Select BYD EV Center: filtri per la lista ricariche."""
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, MESI_FILTRO
+from .coordinator import BydMateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+TIPI = ["Tutte", "Casa", "Fotovoltaico", "Pubblica"]
+PERIODI = ["Settimana", "Mese", "Anno", "Tutto"]
+MESI = MESI_FILTRO
+ANNI = ["Tutti"] + [str(a) for a in range(2024, 2033)]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    coordinator: BydMateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # default filtro mese = "Tutti": la finestra la decide il PERIODO
+    # (Settimana/Mese/Anno/Tutto, di default il mese corrente) e il mese resta
+    # un'eccezione che la sostituisce solo quando scelto a mano.
+    async_add_entities([
+        MateSelect(coordinator, "filtro_tipo", TIPI, "Tutte", "mdi:filter-variant",
+                   extra_options=coordinator.charge_zone_options),
+        MateSelect(coordinator, "filtro_periodo", PERIODI, "Mese", "mdi:calendar-range"),
+        MateSelect(coordinator, "filtro_mese", MESI, "Tutti", "mdi:calendar-month"),
+        MateSelect(coordinator, "filtro_anno", ANNI, "Tutti", "mdi:calendar-multiple"),
+    ])
+
+
+class MateSelect(CoordinatorEntity[BydMateCoordinator], RestoreEntity, SelectEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, key, options, default, icon,
+                 extra_options=None) -> None:
+        super().__init__(coordinator)
+        self._key = key
+        self._options = options
+        self._default = default
+        # opzioni che crescono da sole (es. nomi delle zone di ricarica)
+        self._extra_options = extra_options
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_sel_{key}"
+        self._attr_translation_key = key
+        self._attr_icon = icon
+        self._attr_options = options
+        self._attr_current_option = default
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        # il filtro mese NON si ripristina: parte sempre da "Tutti"
+        if self._key != "filtro_mese":
+            last = await self.async_get_last_state()
+            if last is not None and last.state in self._options:
+                self._attr_current_option = last.state
+        self.coordinator.register_setting("select", self._key, self.entity_id)
+        self._refresh_options()
+
+    def _refresh_options(self) -> None:
+        """Aggiunge le opzioni dinamiche e riporta a default un valore sparito."""
+        if not self._extra_options:
+            return
+        try:
+            extra = [str(o) for o in (self._extra_options() or [])]
+        except Exception:  # noqa: BLE001
+            extra = []
+        opts = list(self._options) + [o for o in extra if o not in self._options]
+        if opts != list(self._attr_options):
+            self._attr_options = opts
+        if self._attr_current_option not in self._attr_options:
+            self._attr_current_option = self._default
+
+    def _handle_coordinator_update(self) -> None:
+        self._refresh_options()
+        super()._handle_coordinator_update()
+
+    async def async_select_option(self, option: str) -> None:
+        self._refresh_options()
+        if option in self._attr_options:
+            self._attr_current_option = option
+            self.async_write_ha_state()
+            await self.coordinator.async_request_refresh()

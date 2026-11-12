@@ -1,0 +1,82 @@
+"""Switch BYD EV Center: abilita notifiche e automazioni di ricarica."""
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+from .coordinator import BydMateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    coordinator: BydMateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = [
+        MateSwitch(coordinator, "notify_start", True, "mdi:battery-charging"),
+        MateSwitch(coordinator, "notify_end", True, "mdi:battery-charging-complete"),
+        MateSwitch(coordinator, "low_soc", True, "mdi:battery-alert"),
+        MateSwitch(coordinator, "charge_sched", False, "mdi:calendar-clock"),
+        MateSwitch(coordinator, "balance", False, "mdi:solar-power"),
+        MateSwitch(coordinator, "home_balance", False, "mdi:home-lightning-bolt"),
+        MateSwitch(coordinator, "battery_night_only", False, "mdi:weather-night"),
+    ]
+    # lo switch GSE esiste solo se la sperimentazione è abilitata in configurazione
+    if getattr(coordinator, "gse_enabled", False):
+        entities.append(MateSwitch(coordinator, "gse", False, "mdi:transmission-tower"))
+    async_add_entities(entities)
+
+
+class MateSwitch(CoordinatorEntity[BydMateCoordinator], RestoreEntity, SwitchEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, key, default, icon) -> None:
+        super().__init__(coordinator)
+        self._key = key
+        self._default = default
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{coordinator.entry.entry_id}_sw_{key}"
+        self._attr_translation_key = key
+        self._attr_icon = icon
+        self._attr_is_on = default
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is not None and last.state in ("on", "off"):
+            self._attr_is_on = last.state == "on"
+        self.coordinator.register_setting("switch", self._key, self.entity_id)
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self._attr_is_on)
+
+    @property
+    def extra_state_attributes(self):
+        if self._key == "low_soc":
+            # usati dalla vista Automazioni per mostrare soglia/orari/giorni correnti
+            return {"giorni": list(getattr(self.coordinator, "low_soc_days", [])),
+                    "soglia": getattr(self.coordinator, "low_soc_threshold", None),
+                    "dalle": getattr(self.coordinator, "low_soc_start", None),
+                    "alle": getattr(self.coordinator, "low_soc_end", None)}
+        return {}
+
+    async def async_turn_on(self, **kwargs) -> None:
+        self._attr_is_on = True
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        self._attr_is_on = False
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
