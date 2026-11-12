@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 - 2026-11-12
+
+- Eliminati gli avvisi di deprecazione del `climate`: usati
+  `_attr_native_temperature_unit`, `native_current_temperature` e
+  `native_target_temperature` (le vecchie proprietà smettono di funzionare da
+  Home Assistant 2027.11).
+
 ## 1.0.2 - 2026-11-12
 
 - Fix **errore di configurazione** all'apertura della dashboard: le risorse
