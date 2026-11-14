@@ -118,6 +118,22 @@ async def register_card_resource(hass: HomeAssistant) -> None:
             _LOGGER.warning("Registrazione risorsa %s fallita: %s", url, err)
 
 
+def custom_car_photo(hass: HomeAssistant) -> str | None:
+    """Foto auto caricata dall'utente: /config/www/byd-ev-center/auto.png.
+
+    Nessuna copia: HA serve già /config/www come /local/. Il mtime fa da
+    cache-busting, così sostituire il file aggiorna l'immagine.
+    """
+    photo = hass.config.path("www", "byd-ev-center", "auto.png")
+    if not os.path.isfile(photo):
+        return None
+    try:
+        stamp = int(os.path.getmtime(photo))
+    except OSError:
+        stamp = 0
+    return f"/local/byd-ev-center/auto.png?v={stamp}"
+
+
 def car_image_url(entry: ConfigEntry) -> str:
     """URL della foto del modello, servita dalla cartella dell'integrazione."""
     # il modello può stare in entry.data (setup iniziale) O in entry.options
@@ -136,7 +152,7 @@ def car_image_url(entry: ConfigEntry) -> str:
 
 def _panel_view(name: str, image: str | None, overrides: dict[str, Any] | None = None,
                 version: str = "", opts_wb: bool = True,
-                opts_profile: str = "") -> dict[str, Any]:
+                opts_profile: str = "", image_fallback: str | None = None) -> dict[str, Any]:
     """Vista unica tipo panel: una sola card custom full-width."""
     card: dict[str, Any] = {
         "type": "custom:byd-ev-center-panel",
@@ -150,6 +166,8 @@ def _panel_view(name: str, image: str | None, overrides: dict[str, Any] | None =
     }
     if image:
         card["image"] = image
+    if image_fallback:
+        card["imageFallback"] = image_fallback
     if overrides:
         card["overrides"] = overrides
     return {"title": f"{name} EV Center", "path": "ev-center", "type": "panel",
@@ -349,9 +367,10 @@ async def async_setup_dashboard(hass: HomeAssistant, entry: ConfigEntry, name: s
         "byd_tire_rr": opts.get(CONF_BYD_TIRE_RR),
     }
     overrides = {k: v for k, v in _ov.items() if v}
-    views = [_panel_view(name, car_image_url(entry), overrides, version,
+    model_img = car_image_url(entry)
+    views = [_panel_view(name, custom_car_photo(hass) or model_img, overrides, version,
                          bool(opts.get(CONF_WALLBOX_ENABLED, True)),
-                         str(opts.get(CONF_PROFILE) or ""))]
+                         str(opts.get(CONF_PROFILE) or ""), model_img)]
 
     async def piano_b() -> None:
         path = await hass.async_add_executor_job(_export_yaml_fallback, hass, name, views)

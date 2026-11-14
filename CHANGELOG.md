@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.8 - 2026-11-14
+
+Porta delle modifiche 1.1.29 → 1.1.34 del progetto di riferimento:
+
+- **Vampire drain onesto**: il calo da fermo conta solo se non c'è carica, il
+  viaggio non è in corso e l'odometro è noto e immobile fra due letture;
+  `VAMP_RATE_MAX` da 3.0 a 1.0 %/h (prima contava anche la guida lenta:
+  "oggi 4%, mese 44%").
+- **Foto auto personalizzata**: se esiste `/config/www/byd-ev-center/auto.png`
+  la dashboard la usa al posto dell'immagine del modello, con mtime come
+  cache-busting; il pannello ripiega sul modello in caso di errore.
+- **Toponimi nella lingua di Home Assistant**: Nominatim riceve
+  `accept-language` dalla lingua di HA, la cache geocoding è per lingua e i
+  viaggi/ricariche salvano `geo_lang`: al cambio lingua vengono rigeocodificati
+  (anche quelli vecchi, con throttle ~1 req/s).
+- **Testi residui del pannello tradotti** (messaggi di tabelle/grafici vuoti,
+  toast, tooltip "Elimina/Modifica", etichette notifiche, interruttori):
+  ~49 voci nuove in UI2 + frase "Fuori" in PHRASES per i testi composti
+  (tabella Rotte: "Fuori → Fuori" ora si traduce per intero).
+
 ## 1.0.7 - 2026-11-12
 
 - Porta delle modifiche 1.1.28/1.1.29 del progetto di riferimento:

@@ -20,7 +20,7 @@
  */
 
 /** Versione compilata: usata per l'auto-refresh quando l'integrazione viene aggiornata. */
-const BYD_VER = "1.0.7";
+const BYD_VER = "1.0.8";
 let _recVerChecked = false;
 
 // --- i18n del pannello: lingua da hass.language (IT base, EN/FR). ES/DE in arrivo ---
@@ -2638,6 +2638,300 @@ const UI2 = {
     "fr": "Km aujourd'hui",
     "es": "Km hoy",
     "de": "Km heute"
+  },
+  "Nessun viaggio.": {
+    "en": "No trips.",
+    "fr": "Aucun trajet.",
+    "es": "Ningún viaje.",
+    "de": "Keine Fahrten."
+  },
+  "Nessuna ricarica registrata": {
+    "en": "No charges logged",
+    "fr": "Aucune recharge enregistrée",
+    "es": "Ninguna recarga registrada",
+    "de": "Keine Ladungen erfasst"
+  },
+  "Nessuna sessione": {
+    "en": "No sessions",
+    "fr": "Aucune session",
+    "es": "Ninguna sesión",
+    "de": "Keine Sitzungen"
+  },
+  "Nessun dato storico.": {
+    "en": "No historical data.",
+    "fr": "Aucune donnée historique.",
+    "es": "Sin datos históricos.",
+    "de": "Keine Verlaufsdaten."
+  },
+  "Nessun dato risparmio.": {
+    "en": "No savings data.",
+    "fr": "Aucune donnée d'économies.",
+    "es": "Sin datos de ahorro.",
+    "de": "Keine Ersparnisdaten."
+  },
+  "Nessun dato per le fasce.": {
+    "en": "No data for the time bands.",
+    "fr": "Aucune donnée pour les plages.",
+    "es": "Sin datos para las franjas.",
+    "de": "Keine Daten für die Zeitfenster."
+  },
+  "Nessun dato per il filtro": {
+    "en": "No data for the filter",
+    "fr": "Aucune donnée pour le filtre",
+    "es": "Sin datos para el filtro",
+    "de": "Keine Daten für den Filter"
+  },
+  "Nessun dato per l'anno scelto": {
+    "en": "No data for the selected year",
+    "fr": "Aucune donnée pour l'année choisie",
+    "es": "Sin datos para el año elegido",
+    "de": "Keine Daten für das gewählte Jahr"
+  },
+  "Nessun intervento registrato": {
+    "en": "No maintenance logged",
+    "fr": "Aucune intervention enregistrée",
+    "es": "Ningún mantenimiento registrado",
+    "de": "Keine Wartung erfasst"
+  },
+  "Dati insufficienti.": {
+    "en": "Insufficient data.",
+    "fr": "Données insuffisantes.",
+    "es": "Datos insuficientes.",
+    "de": "Unzureichende Daten."
+  },
+  "Grafico non disponibile.": {
+    "en": "Chart not available.",
+    "fr": "Graphique indisponible.",
+    "es": "Gráfico no disponible.",
+    "de": "Diagramm nicht verfügbar."
+  },
+  "Mappa non disponibile": {
+    "en": "Map not available",
+    "fr": "Carte indisponible",
+    "es": "Mapa no disponible",
+    "de": "Karte nicht verfügbar"
+  },
+  "Posizione non disponibile": {
+    "en": "Location not available",
+    "fr": "Position indisponible",
+    "es": "Ubicación no disponible",
+    "de": "Standort nicht verfügbar"
+  },
+  "Nessuno storico mensile ancora": {
+    "en": "No monthly history yet",
+    "fr": "Pas encore d'historique mensuel",
+    "es": "Aún no hay historial mensual",
+    "de": "Noch kein Monatsverlauf"
+  },
+  "Nessun viaggio per il filtro scelto": {
+    "en": "No trips for the selected filter",
+    "fr": "Aucun trajet pour le filtre choisi",
+    "es": "Ningún viaje para el filtro elegido",
+    "de": "Keine Fahrten für den gewählten Filter"
+  },
+  "Nessuna automazione attiva (BYD/Wallbox/Bilanciamento).": {
+    "en": "No active automations (BYD/Wallbox/Balancing).",
+    "fr": "Aucune automatisation active (BYD/Wallbox/Équilibrage).",
+    "es": "Ninguna automatización activa (BYD/Wallbox/Balanceo).",
+    "de": "Keine aktiven Automatisierungen (BYD/Wallbox/Ausgleich)."
+  },
+  "A/C avviata": {
+    "en": "A/C started",
+    "fr": "Clim démarrée",
+    "es": "A/C iniciado",
+    "de": "Klima gestartet"
+  },
+  "Avvia carica (auto)": {
+    "en": "Start charge (car)",
+    "fr": "Démarrer la recharge (voiture)",
+    "es": "Iniciar carga (coche)",
+    "de": "Laden starten (Auto)"
+  },
+  "Viaggio chiuso": {
+    "en": "Trip closed",
+    "fr": "Trajet clôturé",
+    "es": "Viaje cerrado",
+    "de": "Fahrt beendet"
+  },
+  "CSV esportato": {
+    "en": "CSV exported",
+    "fr": "CSV exporté",
+    "es": "CSV exportado",
+    "de": "CSV exportiert"
+  },
+  "Aggiornamento auto richiesto": {
+    "en": "Car refresh requested",
+    "fr": "Actualisation de la voiture demandée",
+    "es": "Actualización del coche solicitada",
+    "de": "Fahrzeugaktualisierung angefordert"
+  },
+  "Km azzerati": {
+    "en": "Km reset",
+    "fr": "Km remis à zéro",
+    "es": "Km reiniciados",
+    "de": "Km zurückgesetzt"
+  },
+  "Energia azzerata": {
+    "en": "Energy reset",
+    "fr": "Énergie remise à zéro",
+    "es": "Energía reiniciada",
+    "de": "Energie zurückgesetzt"
+  },
+  "Costi azzerati": {
+    "en": "Costs reset",
+    "fr": "Coûts remis à zéro",
+    "es": "Costes reiniciados",
+    "de": "Kosten zurückgesetzt"
+  },
+  "Rinnovata +6 mesi": {
+    "en": "Renewed +6 months",
+    "fr": "Renouvelée +6 mois",
+    "es": "Renovado +6 meses",
+    "de": "Verlängert +6 Monate"
+  },
+  "Rinnovata +1 anno": {
+    "en": "Renewed +1 year",
+    "fr": "Renouvelée +1 an",
+    "es": "Renovado +1 año",
+    "de": "Verlängert +1 Jahr"
+  },
+  "Ricarica avviata": {
+    "en": "Charge started",
+    "fr": "Recharge démarrée",
+    "es": "Carga iniciada",
+    "de": "Ladung gestartet"
+  },
+  "Ricarica fermata": {
+    "en": "Charge stopped",
+    "fr": "Recharge arrêtée",
+    "es": "Carga detenida",
+    "de": "Ladung gestoppt"
+  },
+  "Luci": {
+    "en": "Lights",
+    "fr": "Feux",
+    "es": "Luces",
+    "de": "Lichter"
+  },
+  "Luci lampeggianti": {
+    "en": "Flashing lights",
+    "fr": "Appel de phares",
+    "es": "Luces intermitentes",
+    "de": "Lichthupe"
+  },
+  "Giorni avviso salvati": {
+    "en": "Alert days saved",
+    "fr": "Jours d'alerte enregistrés",
+    "es": "Días de aviso guardados",
+    "de": "Warntage gespeichert"
+  },
+  "Stop carica": {
+    "en": "Stop charge",
+    "fr": "Arrêter la recharge",
+    "es": "Detener carga",
+    "de": "Laden stoppen"
+  },
+  "Intervento registrato": {
+    "en": "Maintenance logged",
+    "fr": "Intervention enregistrée",
+    "es": "Mantenimiento registrado",
+    "de": "Wartung erfasst"
+  },
+  "Notifica attivata": {
+    "en": "Notification enabled",
+    "fr": "Notification activée",
+    "es": "Notificación activada",
+    "de": "Benachrichtigung aktiviert"
+  },
+  "Notifica disattivata": {
+    "en": "Notification disabled",
+    "fr": "Notification désactivée",
+    "es": "Notificación desactivada",
+    "de": "Benachrichtigung deaktiviert"
+  },
+  "Automazione attivata": {
+    "en": "Automation enabled",
+    "fr": "Automatisation activée",
+    "es": "Automatización activada",
+    "de": "Automatisierung aktiviert"
+  },
+  "Automazione disattivata": {
+    "en": "Automation disabled",
+    "fr": "Automatisation désactivée",
+    "es": "Automatización desactivada",
+    "de": "Automatisierung deaktiviert"
+  },
+  "Elimina": {
+    "en": "Delete",
+    "fr": "Supprimer",
+    "es": "Eliminar",
+    "de": "Löschen"
+  },
+  "Modifica": {
+    "en": "Edit",
+    "fr": "Modifier",
+    "es": "Editar",
+    "de": "Bearbeiten"
+  },
+  "Notifiche - attiva/disattiva": {
+    "en": "Notifications — on/off",
+    "fr": "Notifications — activer/désactiver",
+    "es": "Notificaciones — activar/desactivar",
+    "de": "Benachrichtigungen — an/aus"
+  },
+  "Avvio ricarica": {
+    "en": "Charge start",
+    "fr": "Début recharge",
+    "es": "Inicio recarga",
+    "de": "Ladestart"
+  },
+  "Batteria bassa": {
+    "en": "Low battery",
+    "fr": "Batterie faible",
+    "es": "Batería baja",
+    "de": "Batterie schwach"
+  },
+  "Riepilogo giornaliero": {
+    "en": "Daily summary",
+    "fr": "Résumé quotidien",
+    "es": "Resumen diario",
+    "de": "Tageszusammenfassung"
+  },
+  "Scadenze": {
+    "en": "Deadlines",
+    "fr": "Échéances",
+    "es": "Vencimientos",
+    "de": "Fristen"
+  },
+  "Bilanciamento casa": {
+    "en": "Home balancing",
+    "fr": "Équilibrage maison",
+    "es": "Balance casa",
+    "de": "Haus-Balancing"
+  },
+  "Bilanciamento solare": {
+    "en": "Solar balancing",
+    "fr": "Équilibrage solaire",
+    "es": "Balance solar",
+    "de": "Solar-Balancing"
+  },
+  "GSE stop": {
+    "en": "GSE stop",
+    "fr": "GSE arrêt",
+    "es": "GSE parada",
+    "de": "GSE Stopp"
+  },
+  "GSE ripresa": {
+    "en": "GSE resume",
+    "fr": "GSE reprise",
+    "es": "GSE reanudar",
+    "de": "GSE Fortsetzen"
+  },
+  "Avvio programmato": {
+    "en": "Scheduled start",
+    "fr": "Démarrage programmé",
+    "es": "Inicio programado",
+    "de": "Geplanter Start"
   }
 };
 
@@ -2741,6 +3035,16 @@ const PHRASES = [
       "fr": "(pleine)",
       "es": "(completa)",
       "de": "(voll)"
+    }
+  ],
+  [
+    "Fuori",
+    {
+      "it": "Fuori",
+      "en": "Outside",
+      "fr": "Dehors",
+      "es": "Fuera",
+      "de": "Außerhalb"
     }
   ]
 ];
@@ -2857,6 +3161,7 @@ class BydEvCenterPanel extends HTMLElement {
       name,
       car: config.car || this._slug(name),
       image: config.image || "/byd_ev_center/images/custom.png",
+      imageFallback: config.imageFallback || "",
       notify: config.notify || "",
       overrides: config.overrides || {},
       capacity: config.capacity || 60,
@@ -4306,11 +4611,17 @@ class BydEvCenterPanel extends HTMLElement {
     if (chipPlug) chipPlug.textContent = this._plugOn() ? _t("chip_collegata", "🔗 Collegata") : _t("chip_scollegata", "🔗 Scollegata");
     const chargeStatus = root.querySelector('[data-c="chargestatus"]');
     if (chargeStatus) chargeStatus.textContent = this._chargeOn() ? _t("state_in_carica", "In carica") : _t("state_non_in_carica", "Non in carica");
-    // foto auto
+    // foto auto: /config/www/byd-ev-center/auto.png se presente, altrimenti modello
     const img = root.querySelector('[data-c="carimg"]');
     if (img) {
+      const bust = (u) => u + (u.indexOf("?") < 0 ? "?v=" : "&v=") + BYD_VER;
+      const fb = this._cfg.imageFallback;
+      const ph = "this.parentNode.innerHTML='<div class=\\'ph\\'>🚗</div>'";
+      const onerr = fb
+        ? `if(this.dataset.fb&&this.getAttribute('src')!==this.dataset.fb){this.src=this.dataset.fb}else{${ph}}`
+        : ph;
       img.innerHTML = this._cfg.image
-        ? `<img src="${this._cfg.image + (this._cfg.image.indexOf("?") < 0 ? "?v=" : "&v=") + BYD_VER}" alt="${this._cfg.name}" onerror="this.parentNode.innerHTML='<div class=\\'ph\\'>🚗</div>'">`
+        ? `<img src="${bust(this._cfg.image)}" alt="${this._cfg.name}"${fb ? ` data-fb="${bust(fb)}"` : ""} onerror="${onerr}">`
         : `<div class="ph">🚗</div>`;
     }
     // comandi: valori
