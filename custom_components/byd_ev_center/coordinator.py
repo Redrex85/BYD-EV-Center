@@ -532,7 +532,8 @@ class BydMateCoordinator(DataUpdateCoordinator):
         opts = {**entry.data, **entry.options}
         self.entry = entry
         self.geocode_enabled = bool(opts.get(CONF_GEOCODE_ENABLED, True))
-        self._geocode_lang_done: str | None = None  # ultima lingua geocodificata
+        self._geocode_lang_done: str | None = None
+        self._geocode_busy = False  # ultima lingua geocodificata
         # diagnostica (report): ultimo errore classificato, ultimo successo, geocoding
         self.last_error: dict[str, Any] | None = None
         self.last_success: str | None = None
@@ -2682,12 +2683,12 @@ class BydMateCoordinator(DataUpdateCoordinator):
             lat, lon = gps.get("lat"), gps.get("lon")
             if lat is None or lon is None:
                 continue
-            touched = True
             info = await self._reverse_geocode(lat, lon)
             if info:
                 record[lkey] = info.get("label") or info.get("citta") or ""
                 record[pkey] = info.get("paese") or ""
-        if touched:
+                got = True
+        if got:
             record["geo_lang"] = lang
         self.persist()
 
@@ -2714,8 +2715,8 @@ class BydMateCoordinator(DataUpdateCoordinator):
         if lat is None or lon is None:
             return
         info = await self._reverse_geocode(lat, lon)
-        record["geo_lang"] = lang
         if info:
+            record["geo_lang"] = lang
             record["luogo"] = info.get("label") or info.get("citta") or ""
             record["paese"] = info.get("paese") or ""
         self.persist()
@@ -2723,20 +2724,17 @@ class BydMateCoordinator(DataUpdateCoordinator):
     def _maybe_backfill_geocode(self) -> None:
         """Rigeocodifica viaggi/ricariche quando cambia la lingua di Home Assistant.
 
-        Gira una volta per lingua avviata: la cache è già per lingua e il throttle
-        Nominatim resta quello di `_reverse_geocode`.
+        Nominatim ha un throttle: il lavoro è spezzato in più passate e la lingua si
+        considera chiusa solo quando una passata non trova più niente da rifare.
         """
-        if not self.geocode_enabled:
+        if not self.geocode_enabled or self._geocode_busy:
             return
-        lang = self._geo_lang()
-        if self._geocode_lang_done == lang:
+        if self._geocode_lang_done == self._geo_lang():
             return
-        self._geocode_lang_done = lang
         self.hass.async_create_task(self._geocode_backfill())
 
-    async def _geocode_backfill(self) -> None:
-        """Geocodifica i record senza toponimi o con lingua diversa, 1 alla volta (~1 req/s)."""
-        lang = self._geo_lang()
+    def _geocode_pending(self, lang: str) -> int:
+        """Quanti record hanno ancora bisogno di toponimi nella lingua `lang`."""
         n = 0
         for t in self.store.data.get("trips", []):
             if not (t.get("gps_partenza") or t.get("gps_arrivo")):
@@ -2744,23 +2742,48 @@ class BydMateCoordinator(DataUpdateCoordinator):
             if (t.get("geo_lang") == lang and t.get("luogo_partenza")
                     and t.get("luogo_arrivo")):
                 continue
-            await self._geocode_trip(t)
             n += 1
-            if n >= 120:
-                break
-            await asyncio.sleep(1.1)
-        for c in self.store.data.get("charges", []):
-            if not c.get("gps"):
+        for cc in self.store.data.get("charges", []):
+            if not cc.get("gps"):
                 continue
-            if c.get("geo_lang") == lang and c.get("luogo"):
+            if cc.get("geo_lang") == lang and cc.get("luogo"):
                 continue
-            await self._geocode_charge(c)
             n += 1
-            if n >= 160:
-                break
-            await asyncio.sleep(1.1)
+        return n
+
+    async def _geocode_backfill(self) -> None:
+        """Geocodifica i record senza toponimi o con lingua diversa, 1 alla volta (~1 req/s)."""
+        lang = self._geo_lang()
+        self._geocode_busy = True
+        n = 0
+        try:
+            for t in self.store.data.get("trips", []):
+                if not (t.get("gps_partenza") or t.get("gps_arrivo")):
+                    continue
+                if (t.get("geo_lang") == lang and t.get("luogo_partenza")
+                        and t.get("luogo_arrivo")):
+                    continue
+                await self._geocode_trip(t)
+                n += 1
+                if n >= 120:
+                    break
+                await asyncio.sleep(1.1)
+            for cc in self.store.data.get("charges", []):
+                if not cc.get("gps"):
+                    continue
+                if cc.get("geo_lang") == lang and cc.get("luogo"):
+                    continue
+                await self._geocode_charge(cc)
+                n += 1
+                if n >= 160:
+                    break
+                await asyncio.sleep(1.1)
+        finally:
+            self._geocode_busy = False
         if n:
             _LOGGER.info("Geocoding: rielaborati %s record (%s)", n, lang)
+        if self._geocode_pending(lang) == 0:
+            self._geocode_lang_done = lang
         self.persist()
 
     def charge_zone_options(self) -> list[str]:

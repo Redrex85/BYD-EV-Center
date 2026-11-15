@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.9 - Porting 1.1.35-1.1.38 del riferimento
+
+- **Archivio viaggi**: di default è espanso solo l'ultimo mese presente in archivio (prima restavano aperti tutti tranne il mese precedente); gli anni restano contenitori aperti e l'apertura manuale viene ricordata.
+- **Toast tradotti**: la traduzione del DOM è stata estratta in `_trText()` e applicata anche ai toast, che prima restavano in italiano in ogni lingua.
+- **~30 stringhe del pannello** che erano letterali italiani ora passano dalle tabelle (IT/EN/FR/ES/DE) e 29 voci nuove in UI2 (esiti azioni, rimandi "Configura → …", "Archivio viaggi vuoto", "Fascia di temperatura", "km mancanti", "TOTALE", "sess", "gg", "giorni", "FV/Bat/Pub").
+- **Plurali**: nuova `_pl()` (singolare/plurale corretto nei contatori: "1 viaggio / 2 viaggi", "1 giorno / 5 giorni").
+- **Geocoding**: il backfill non è più una tantum (prima si fermava dopo 120 viaggi + 40 ricariche e il resto restava in italiano); la lingua viene marcata solo se il toponimo è stato davvero aggiornato.
+- **Options flow**: unità `€/anno` e `gg`, giorni della settimana, opzione `data` e opzione `Custom` del modello seguono la lingua di Home Assistant; fix unità `?` → `€` sulla spesa pre-integrazione.
+- **Foto auto**: sostituire `auto.png` si vede subito senza ricaricare l'integrazione.
+
 ## 1.0.8 - 2026-11-14
 
 Porta delle modifiche 1.1.29 → 1.1.34 del progetto di riferimento:
